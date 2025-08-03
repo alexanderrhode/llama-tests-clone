@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LLAMA E – Sound–Symbol Mapping</title>
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const idInput = document.getElementById('identifier');
+      const soundBtn = document.getElementById('soundBtn');
+      const startStudyBtn = document.getElementById('startStudyBtn');
+      const studySection = document.getElementById('studySection');
+      const testSection = document.getElementById('testSection');
+      const timerDisplay = document.getElementById('studyTimer');
+      const mappingTable = document.getElementById('mappingTable');
+      const sequenceDisplay = document.getElementById('sequenceDisplay');
+      const optionsContainer = document.getElementById('optionsContainer');
+      const progressDisplay = document.getElementById('progressDisplay');
+      const resultDisplay = document.getElementById('resultDisplay');
+
+      let studyCountdown;
+      let timeRemaining;
+      let canStartTest = false;
+      const symbolMap = {
+        '0ï': 'ba', '3ï': 'be', '9ï': 'bi',
+        '0i': 'da', '3i': 'de', '9i': 'di',
+        '0î': 'ga', '3î': 'ge',
+        '0ë': 'ka', '3ë': 'ke', '9ë': 'ki',
+        '0e': 'la', '3e': 'le', '9e': 'li'
+      };
+      let sequences = [];
+      let currentIndex = 0;
+      let score = 0;
+
+      function buildMappingTable() {
+        mappingTable.innerHTML = '';
+        const entries = Object.entries(symbolMap);
+        entries.forEach(([symbol, sound]) => {
+          const row = document.createElement('tr');
+          const symCell = document.createElement('td');
+          symCell.textContent = symbol;
+          const soundCell = document.createElement('td');
+          soundCell.textContent = sound;
+          row.appendChild(symCell);
+          row.appendChild(soundCell);
+          mappingTable.appendChild(row);
+        });
+      }
+
+      function playSound() {
+        // Play a short beep sound encoded in base64
+        const audio = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=');
+        audio.play();
+      }
+
+      function startStudy() {
+        studySection.style.display = 'block';
+        testSection.style.display = 'none';
+        buildMappingTable();
+        timeRemaining = 120;
+        timerDisplay.textContent = formatTime(timeRemaining);
+        canStartTest = false;
+        studyCountdown = setInterval(() => {
+          timeRemaining--;
+          if (timeRemaining === 60) {
+            canStartTest = true;
+            startStudyBtn.disabled = false;
+            startStudyBtn.textContent = 'Begin Test';
+          }
+          if (timeRemaining <= 0) {
+            clearInterval(studyCountdown);
+            beginTest();
+          }
+          timerDisplay.textContent = formatTime(timeRemaining);
+        }, 1000);
+      }
+
+      function formatTime(seconds) {
+        const m = Math.floor(seconds / 60).toString().padStart(1, '0');
+        const s = (seconds % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+      }
+
+      function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+      }
+
+      function generateSequences() {
+        const symbols = Object.keys(symbolMap);
+        sequences = [];
+        for (let i = 0; i < 10; i++) {
+          const len = 3;
+          let seq = '';
+          let roman = '';
+          for (let j = 0; j < len; j++) {
+            const sym = symbols[Math.floor(Math.random() * symbols.length)];
+            seq += sym;
+            roman += symbolMap[sym];
+          }
+          sequences.push({ seq, roman });
+        }
+      }
+
+      function beginTest() {
+        clearInterval(studyCountdown);
+        studySection.style.display = 'none';
+        testSection.style.display = 'block';
+        generateSequences();
+        currentIndex = 0;
+        score = 0;
+        resultDisplay.textContent = '';
+        showNextSequence();
+      }
+
+      function showNextSequence() {
+        if (currentIndex >= sequences.length) {
+          sequenceDisplay.textContent = '';
+          optionsContainer.innerHTML = '';
+          progressDisplay.textContent = '';
+          resultDisplay.textContent = `Your score: ${score} out of ${sequences.length}`;
+          return;
+        }
+        const item = sequences[currentIndex];
+        sequenceDisplay.textContent = item.seq;
+        progressDisplay.textContent = `${currentIndex + 1}/${sequences.length}`;
+        // Create options: correct romanisation + 3 incorrect random romanisations
+        const romanisations = sequences.map(s => s.roman);
+        const options = [item.roman];
+        while (options.length < 4) {
+          const rand = romanisations[Math.floor(Math.random() * romanisations.length)];
+          if (!options.includes(rand)) options.push(rand);
+        }
+        shuffle(options);
+        optionsContainer.innerHTML = '';
+        options.forEach(opt => {
+          const btn = document.createElement('button');
+          btn.textContent = opt;
+          btn.onclick = () => {
+            if (opt === item.roman) score++;
+            currentIndex++;
+            showNextSequence();
+          };
+          optionsContainer.appendChild(btn);
+        });
+      }
+
+      function validateId() {
+        const value = idInput.value.trim();
+        soundBtn.disabled = !/^[A-Z0-9]{5,15}$/.test(value);
+      }
+
+      idInput.addEventListener('input', validateId);
+      soundBtn.addEventListener('click', () => {
+        playSound();
+        // After playing sound, enable startStudyBtn
+        startStudyBtn.disabled = false;
+      });
+      startStudyBtn.addEventListener('click', () => {
+        if (studySection.style.display === 'none') {
+          startStudy();
+          startStudyBtn.disabled = true;
+          startStudyBtn.textContent = 'Study in progress…';
+        } else if (canStartTest) {
+          beginTest();
+        }
+      });
+      // Initialise state
+      studySection.style.display = 'none';
+      testSection.style.display = 'none';
+      startStudyBtn.disabled = true;
+    });
+  </script>
+</head>
+<body>
+  <header>
+    <h1>LLAMA E – Sound–Symbol Mapping</h1>
+  </header>
+  <main>
+    <section class="form-section">
+      <p>
+        LLAMA E assesses how well you can link unfamiliar symbols with familiar
+        sounds. You will first study a set of symbol–sound correspondences and
+        then be tested on your ability to read sequences of these symbols.
+      </p>
+      <p>
+        Enter your identifier (5–15 uppercase letters or numbers) to begin.
+      </p>
+      <div class="form-group">
+        <label for="identifier">Identifier</label>
+        <input
+          type="text"
+          id="identifier"
+          name="identifier"
+          placeholder="e.g. ABC123"
+          pattern="[A-Z0-9]{5,15}"
+          required
+        />
+      </div>
+      <button id="soundBtn" disabled>Play Sound Check</button>
+      <button id="startStudyBtn" disabled>Begin Study</button>
+    </section>
+    <!-- Study phase -->
+    <section id="studySection">
+      <h2>Study the symbol–sound correspondences</h2>
+      <p>You will have 2 minutes to memorise the table below. After one minute you may start the test early.</p>
+      <div class="timer" id="studyTimer">2:00</div>
+      <table style="border-collapse: collapse; width: 100%; max-width: 500px; margin-bottom: 1rem;">
+        <thead>
+          <tr><th style="border-bottom: 1px solid #ccc; text-align: left; padding-bottom: 0.5rem;">Symbol</th><th style="border-bottom: 1px solid #ccc; text-align: left; padding-bottom: 0.5rem;">Romanisation</th></tr>
+        </thead>
+        <tbody id="mappingTable"></tbody>
+      </table>
+    </section>
+    <!-- Test phase -->
+    <section id="testSection">
+      <h2>Test your reading of the new symbols</h2>
+      <div class="timer" id="progressDisplay"></div>
+      <div class="quiz-question" id="sequenceDisplay"></div>
+      <div id="optionsContainer" class="quiz-options"></div>
+      <div class="score-display" id="resultDisplay"></div>
+    </section>
+  </main>
+  <footer>
+    <p>Return to <a href="index.html">home</a>.</p>
+  </footer>
+</body>
+</html>

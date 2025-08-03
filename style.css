@@ -1,0 +1,161 @@
+/*
+ * Styles for the LLAMA test clone.
+ * This stylesheet defines a clean, responsive layout for all pages in the LLAMA
+ * test suite. It uses flexbox to centre content and makes generous use of
+ * whitespace to enhance readability. Colours are chosen to be easy on the eyes
+ * while still providing sufficient contrast for accessibility. You are free to
+ * modify the colours or typography to better suit your branding or design
+ * preferences.
+ */
+
+/* Reset some basic elements */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  background-color: #f7f9fc;
+  color: #333;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  background-color: #364f6b;
+  color: #fff;
+  padding: 1rem;
+  text-align: center;
+}
+
+header h1 {
+  margin-bottom: 0.5rem;
+}
+
+main {
+  flex: 1;
+  width: 100%;
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 1rem;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+footer {
+  background-color: #f0f2f5;
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+a {
+  color: #1f78b4;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* List of tests on the home page */
+.test-list {
+  list-style-type: none;
+  margin-top: 1rem;
+}
+
+.test-list li {
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+}
+
+.test-list li a {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border: 1px solid #1f78b4;
+  border-radius: 4px;
+  background-color: #e9f2fa;
+}
+
+.test-list li a:hover {
+  background-color: #d0e5f4;
+}
+
+/* Form containers */
+.form-section {
+  margin-bottom: 2rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+input[type="text"],
+input[type="number"],
+select,
+button {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+button {
+  background-color: #364f6b;
+  color: #fff;
+  cursor: pointer;
+}
+
+button:disabled {
+  background-color: #9ba9c5;
+  cursor: not-allowed;
+}
+
+/* Quiz layouts */
+.quiz-container {
+  margin-top: 1.5rem;
+}
+
+.quiz-question {
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+.quiz-options button {
+  margin-top: 0.5rem;
+}
+
+.score-display {
+  margin-top: 1rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+/* Timer display */
+.timer {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #d9534f;
+  margin-bottom: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  main {
+    margin: 1rem;
+    padding: 0.5rem;
+  }
+}

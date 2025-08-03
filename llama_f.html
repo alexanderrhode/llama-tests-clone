@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LLAMA F – Grammar Induction</title>
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const idInput = document.getElementById('identifier');
+      const startBtn = document.getElementById('startBtn');
+      const studySection = document.getElementById('studySection');
+      const testSection = document.getElementById('testSection');
+      const timerDisplay = document.getElementById('studyTimer');
+      const cardContainer = document.getElementById('cardContainer');
+      const questionDisplay = document.getElementById('questionDisplay');
+      const optionsContainer = document.getElementById('optionsContainer');
+      const progressDisplay = document.getElementById('progressDisplay');
+      const resultDisplay = document.getElementById('resultDisplay');
+
+      let studyCountdown;
+      let timeRemaining;
+      let canStartTest = false;
+      let items = [];
+      let testItems = [];
+      let currentIndex = 0;
+      let score = 0;
+
+      function initItems() {
+        // Each item has a pseudo sentence and a plain English translation
+        items = [
+          { desc: 'umush atak atag', trans: 'blue circle big', image: 'https://via.placeholder.com/120?text=1' },
+          { desc: 'unak eket eked', trans: 'red square small', image: 'https://via.placeholder.com/120?text=2' },
+          { desc: 'unut ipot ipod', trans: 'green triangle big', image: 'https://via.placeholder.com/120?text=3' },
+          { desc: 'irak em en', trans: 'yellow star small', image: 'https://via.placeholder.com/120?text=4' },
+          { desc: 'sa za', trans: 'purple hexagon medium', image: 'https://via.placeholder.com/120?text=5' },
+          { desc: 'ka na la', trans: 'orange heart big', image: 'https://via.placeholder.com/120?text=6' },
+          { desc: 'ra tu pi', trans: 'brown diamond small', image: 'https://via.placeholder.com/120?text=7' },
+          { desc: 'mo ki ki', trans: 'pink rectangle medium', image: 'https://via.placeholder.com/120?text=8' },
+          { desc: 'li po ni', trans: 'grey oval big', image: 'https://via.placeholder.com/120?text=9' },
+          { desc: 'fa le ri', trans: 'white pentagon small', image: 'https://via.placeholder.com/120?text=10' }
+        ];
+      }
+
+      function renderStudyCards() {
+        cardContainer.innerHTML = '';
+        items.forEach(item => {
+          const card = document.createElement('div');
+          card.style.display = 'flex';
+          card.style.flexDirection = 'column';
+          card.style.alignItems = 'center';
+          card.style.margin = '0.5rem';
+          const img = document.createElement('img');
+          img.src = item.image;
+          img.alt = item.trans;
+          img.style.width = '100px';
+          img.style.height = '100px';
+          const spanDesc = document.createElement('span');
+          spanDesc.textContent = item.desc;
+          spanDesc.style.fontStyle = 'italic';
+          const spanTrans = document.createElement('span');
+          spanTrans.textContent = item.trans;
+          card.appendChild(img);
+          card.appendChild(spanDesc);
+          card.appendChild(spanTrans);
+          cardContainer.appendChild(card);
+        });
+      }
+
+      function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+      }
+
+      function startStudy() {
+        initItems();
+        renderStudyCards();
+        studySection.style.display = 'block';
+        testSection.style.display = 'none';
+        timeRemaining = 240; // 4 minutes
+        timerDisplay.textContent = formatTime(timeRemaining);
+        canStartTest = false;
+        startBtn.disabled = true;
+        startBtn.textContent = 'Begin Test';
+        studyCountdown = setInterval(() => {
+          timeRemaining--;
+          if (timeRemaining === 180) {
+            // after 1 minute (4-1=3 minutes left), allow early start
+            canStartTest = true;
+            startBtn.disabled = false;
+          }
+          if (timeRemaining <= 0) {
+            clearInterval(studyCountdown);
+            beginTest();
+          }
+          timerDisplay.textContent = formatTime(timeRemaining);
+        }, 1000);
+      }
+
+      function formatTime(seconds) {
+        const m = Math.floor(seconds / 60).toString().padStart(1, '0');
+        const s = (seconds % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+      }
+
+      function beginTest() {
+        clearInterval(studyCountdown);
+        studySection.style.display = 'none';
+        testSection.style.display = 'block';
+        // Prepare test items: copy and shuffle
+        testItems = items.slice();
+        shuffle(testItems);
+        currentIndex = 0;
+        score = 0;
+        resultDisplay.textContent = '';
+        showNextQuestion();
+      }
+
+      function showNextQuestion() {
+        if (currentIndex >= testItems.length) {
+          questionDisplay.textContent = '';
+          optionsContainer.innerHTML = '';
+          progressDisplay.textContent = '';
+          resultDisplay.textContent = `Your score: ${score} out of ${testItems.length}`;
+          return;
+        }
+        const item = testItems[currentIndex];
+        questionDisplay.innerHTML = `<em>${item.desc}</em>`;
+        progressDisplay.textContent = `${currentIndex + 1}/${testItems.length}`;
+        // Build options: correct translation + 3 incorrect translations
+        const transPool = items.map(i => i.trans).filter(t => t !== item.trans);
+        shuffle(transPool);
+        const options = [item.trans, transPool[0], transPool[1], transPool[2]];
+        shuffle(options);
+        optionsContainer.innerHTML = '';
+        options.forEach(opt => {
+          const btn = document.createElement('button');
+          btn.textContent = opt;
+          btn.onclick = () => {
+            if (opt === item.trans) score++;
+            currentIndex++;
+            showNextQuestion();
+          };
+          optionsContainer.appendChild(btn);
+        });
+      }
+
+      function validateId() {
+        const value = idInput.value.trim();
+        startBtn.disabled = !/^[A-Z0-9]{5,15}$/.test(value);
+      }
+
+      idInput.addEventListener('input', validateId);
+      startBtn.addEventListener('click', () => {
+        if (studySection.style.display === 'none') {
+          // Start study
+          startStudy();
+        } else if (canStartTest) {
+          beginTest();
+        }
+      });
+      // Initialise state
+      studySection.style.display = 'none';
+      testSection.style.display = 'none';
+    });
+  </script>
+</head>
+<body>
+  <header>
+    <h1>LLAMA F – Grammar Induction</h1>
+  </header>
+  <main>
+    <section class="form-section">
+      <p>
+        LLAMA F gauges your ability to extract grammatical rules from examples.
+        You will be shown descriptions in a fictional language (PATSI) paired
+        with simple pictures. After studying these pairs, you will be tested on
+        your understanding of the underlying patterns.
+      </p>
+      <p>
+        Enter your identifier (5–15 uppercase letters or numbers) to begin.
+      </p>
+      <div class="form-group">
+        <label for="identifier">Identifier</label>
+        <input
+          type="text"
+          id="identifier"
+          name="identifier"
+          placeholder="e.g. ABC123"
+          pattern="[A-Z0-9]{5,15}"
+          required
+        />
+      </div>
+      <button id="startBtn" disabled>Begin Study</button>
+    </section>
+    <!-- Study phase -->
+    <section id="studySection">
+      <h2>Study the PATSI descriptions and their meanings</h2>
+      <p>You will have 4 minutes to memorise the pairs below. After one minute you may start the test early.</p>
+      <div class="timer" id="studyTimer">4:00</div>
+      <div id="cardContainer" style="display: flex; flex-wrap: wrap;"></div>
+    </section>
+    <!-- Test phase -->
+    <section id="testSection">
+      <h2>Apply your knowledge</h2>
+      <div class="timer" id="progressDisplay"></div>
+      <div class="quiz-question" id="questionDisplay"></div>
+      <div id="optionsContainer" class="quiz-options"></div>
+      <div class="score-display" id="resultDisplay"></div>
+    </section>
+  </main>
+  <footer>
+    <p>Return to <a href="index.html">home</a>.</p>
+  </footer>
+</body>
+</html>

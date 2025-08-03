@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LLAMA D – Lexical Recognition</title>
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    // Script to control the LLAMA D test.
+    document.addEventListener('DOMContentLoaded', () => {
+      const idInput = document.getElementById('identifier');
+      const startBtn = document.getElementById('startBtn');
+      const instructions = document.getElementById('instructions');
+      const testContainer = document.getElementById('testContainer');
+      const wordDisplay = document.getElementById('wordDisplay');
+      const newBtn = document.getElementById('newBtn');
+      const repeatBtn = document.getElementById('repeatBtn');
+      const scoreDisplay = document.getElementById('scoreDisplay');
+      const nextIndicator = document.getElementById('nextIndicator');
+
+      let words = [];
+      let currentIndex = 0;
+      let score = 0;
+      let seen = new Set();
+      let practiceCount = 10;
+
+      // Generate pseudo words for the test. Feel free to update these to real
+      // stimuli. The first half of the array is practice items, the second
+      // half comprises test items.
+      function generateWords() {
+        const pseudo = [
+          'golpa', 'nema', 'taku', 'sedu', 'pimu', 'vora', 'keli', 'sima',
+          'rabu', 'doka', 'muta', 'vira', 'canu', 'zelo', 'pika', 'jano',
+          'fesa', 'loma', 'beka', 'tazi'
+        ];
+        const items = [];
+        // Practice: 5 unique words repeated twice (total 10)
+        for (let i = 0; i < 5; i++) {
+          items.push(pseudo[i]);
+          items.push(pseudo[i]);
+        }
+        // Test: 20 unique words repeated twice (total 40)
+        for (let i = 0; i < 20; i++) {
+          items.push(pseudo[i % pseudo.length]);
+          items.push(pseudo[i % pseudo.length]);
+        }
+        // Shuffle using Fisher–Yates
+        for (let i = items.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [items[i], items[j]] = [items[j], items[i]];
+        }
+        return items;
+      }
+
+      function updateButtons() {
+        const value = idInput.value.trim();
+        // Enable start if identifier matches pattern
+        startBtn.disabled = !/^[A-Z0-9]{5,15}$/.test(value);
+      }
+
+      function showNextWord() {
+        if (currentIndex >= words.length) {
+          // End of test
+          newBtn.disabled = true;
+          repeatBtn.disabled = true;
+          nextIndicator.textContent = '';
+          scoreDisplay.textContent = `Your score: ${score} out of ${words.length - practiceCount}`;
+          return;
+        }
+        const word = words[currentIndex];
+        wordDisplay.textContent = word;
+        nextIndicator.textContent = `${currentIndex + 1}/${words.length}`;
+      }
+
+      function handleResponse(isRepeat) {
+        const word = words[currentIndex];
+        // For practice items, we do not count score but still update seen
+        const isSeen = seen.has(word);
+        if (currentIndex >= practiceCount) {
+          if ((isRepeat && isSeen) || (!isRepeat && !isSeen)) {
+            score++;
+          }
+        }
+        seen.add(word);
+        currentIndex++;
+        showNextWord();
+      }
+
+      idInput.addEventListener('input', updateButtons);
+      startBtn.addEventListener('click', () => {
+        instructions.style.display = 'none';
+        testContainer.style.display = 'block';
+        words = generateWords();
+        currentIndex = 0;
+        score = 0;
+        seen = new Set();
+        showNextWord();
+      });
+      newBtn.addEventListener('click', () => handleResponse(false));
+      repeatBtn.addEventListener('click', () => handleResponse(true));
+    });
+  </script>
+</head>
+<body>
+  <header>
+    <h1>LLAMA D – Lexical Recognition</h1>
+  </header>
+  <main>
+    <section id="instructions" class="form-section">
+      <p>
+        LLAMA D evaluates how well you can recognise words in a newly
+        learned language. During the test you will hear a sequence of words and
+        must decide for each whether it is <em>new</em> or one you have heard
+        before. In this clone the words are displayed on screen instead of
+        played as audio, but the principle is the same.
+      </p>
+      <p>
+        Please enter an identifier consisting of 5–15 uppercase letters or
+        numbers. This is used to match your results across tasks.
+      </p>
+      <div class="form-group">
+        <label for="identifier">Identifier</label>
+        <input
+          type="text"
+          id="identifier"
+          name="identifier"
+          placeholder="e.g. ABC123"
+          pattern="[A-Z0-9]{5,15}"
+          title="5–15 uppercase letters and numbers"
+          required
+        />
+      </div>
+      <button id="startBtn" disabled>Start Test</button>
+    </section>
+    <section id="testContainer" class="quiz-container" style="display: none;">
+      <div class="timer" id="nextIndicator"></div>
+      <div class="quiz-question">
+        <span id="wordDisplay">Word</span>
+      </div>
+      <div class="quiz-options">
+        <button id="newBtn">New Word</button>
+        <button id="repeatBtn">Repeated Word</button>
+      </div>
+      <div class="score-display" id="scoreDisplay"></div>
+    </section>
+  </main>
+  <footer>
+    <p>Return to <a href="index.html">home</a>.</p>
+  </footer>
+</body>
+</html>

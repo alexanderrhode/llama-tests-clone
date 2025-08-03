@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LLAMA B – Vocabulary Learning</title>
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const idInput = document.getElementById('identifier');
+      const startBtn = document.getElementById('startBtn');
+      const learnSection = document.getElementById('learnSection');
+      const testSection = document.getElementById('testSection');
+      const gridContainer = document.getElementById('gridContainer');
+      const timerDisplay = document.getElementById('learnTimer');
+      const testImage = document.getElementById('testImage');
+      const optionsContainer = document.getElementById('optionsContainer');
+      const testProgress = document.getElementById('testProgress');
+      const resultDisplay = document.getElementById('resultDisplay');
+
+      let items = [];
+      let learnCountdown;
+      let timeRemaining = 120; // 2 minutes
+      let canStartEarly = false;
+      let testOrder = [];
+      let currentTestIndex = 0;
+      let score = 0;
+
+      function initItems() {
+        const names = [
+          'taa', 'lulu', 'chaka', 'saa', 'ina', 'chuku', 'koo', 'yutun',
+          'yuka', 'ita', 'iva', 'yoo', 'suma', 'tuu', 'ixa', 'soo',
+          'yua', 'xika', 'suku', 'tachi'
+        ];
+        items = names.map((name, index) => ({
+          name,
+          // use placeholder.com images with index number to differentiate
+          image: `https://via.placeholder.com/120?text=${index + 1}`
+        }));
+      }
+
+      function renderGrid() {
+        gridContainer.innerHTML = '';
+        items.forEach(item => {
+          const div = document.createElement('div');
+          div.style.display = 'flex';
+          div.style.flexDirection = 'column';
+          div.style.alignItems = 'center';
+          div.style.margin = '0.5rem';
+          const img = document.createElement('img');
+          img.src = item.image;
+          img.alt = item.name;
+          img.style.width = '100px';
+          img.style.height = '100px';
+          const span = document.createElement('span');
+          span.textContent = item.name;
+          div.appendChild(img);
+          div.appendChild(span);
+          gridContainer.appendChild(div);
+        });
+      }
+
+      function startLearning() {
+        initItems();
+        renderGrid();
+        learnSection.style.display = 'block';
+        testSection.style.display = 'none';
+        // Start timer
+        timeRemaining = 120;
+        timerDisplay.textContent = formatTime(timeRemaining);
+        canStartEarly = false;
+        startBtn.disabled = true;
+        learnCountdown = setInterval(() => {
+          timeRemaining--;
+          if (timeRemaining === 60) {
+            // After 60 seconds enable start test
+            canStartEarly = true;
+            startBtn.disabled = false;
+          }
+          if (timeRemaining <= 0) {
+            clearInterval(learnCountdown);
+            startTesting();
+          }
+          timerDisplay.textContent = formatTime(timeRemaining);
+        }, 1000);
+      }
+
+      function formatTime(seconds) {
+        const m = Math.floor(seconds / 60).toString().padStart(1, '0');
+        const s = (seconds % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+      }
+
+      function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+      }
+
+      function startTesting() {
+        clearInterval(learnCountdown);
+        learnSection.style.display = 'none';
+        testSection.style.display = 'block';
+        // Prepare test order and shuffle
+        testOrder = items.slice();
+        shuffle(testOrder);
+        currentTestIndex = 0;
+        score = 0;
+        resultDisplay.textContent = '';
+        showNextTestItem();
+      }
+
+      function showNextTestItem() {
+        if (currentTestIndex >= testOrder.length) {
+          // End of test
+          testImage.style.display = 'none';
+          optionsContainer.innerHTML = '';
+          testProgress.textContent = '';
+          resultDisplay.textContent = `Your score: ${score} out of ${items.length}`;
+          return;
+        }
+        const item = testOrder[currentTestIndex];
+        testImage.src = item.image;
+        testImage.alt = 'Test image';
+        testImage.style.display = 'block';
+        testProgress.textContent = `${currentTestIndex + 1}/${items.length}`;
+        // Prepare options: correct name + 3 incorrect names
+        const namesPool = items.map(i => i.name).filter(n => n !== item.name);
+        shuffle(namesPool);
+        const options = [item.name, namesPool[0], namesPool[1], namesPool[2]];
+        shuffle(options);
+        optionsContainer.innerHTML = '';
+        options.forEach(name => {
+          const btn = document.createElement('button');
+          btn.textContent = name;
+          btn.style.marginTop = '0.5rem';
+          btn.onclick = () => {
+            if (name === item.name) {
+              score++;
+            }
+            currentTestIndex++;
+            showNextTestItem();
+          };
+          optionsContainer.appendChild(btn);
+        });
+      }
+
+      function validateId() {
+        const value = idInput.value.trim();
+        startBtn.disabled = !/^[A-Z0-9]{5,15}$/.test(value);
+      }
+
+      idInput.addEventListener('input', validateId);
+      startBtn.addEventListener('click', () => {
+        // If we are in the learn phase and early start is allowed, start test
+        if (learnSection.style.display === 'block' && canStartEarly) {
+          startTesting();
+        } else {
+          startLearning();
+        }
+      });
+
+      // Initialize page: hide test section
+      learnSection.style.display = 'none';
+      testSection.style.display = 'none';
+    });
+  </script>
+</head>
+<body>
+  <header>
+    <h1>LLAMA B – Vocabulary Learning</h1>
+  </header>
+  <main>
+    <!-- Identifier form -->
+    <section class="form-section">
+      <p>
+        LLAMA B measures how effectively you can learn new vocabulary. You will
+        have two minutes to study the names of 20 unfamiliar objects. After
+        memorising them, you will be tested on your knowledge.
+      </p>
+      <p>
+        Enter your identifier (5–15 uppercase letters or numbers) to begin.
+      </p>
+      <div class="form-group">
+        <label for="identifier">Identifier</label>
+        <input
+          type="text"
+          id="identifier"
+          name="identifier"
+          placeholder="e.g. ABC123"
+          pattern="[A-Z0-9]{5,15}"
+          required
+        />
+      </div>
+      <button id="startBtn" disabled>Begin Learning</button>
+    </section>
+    <!-- Learning phase -->
+    <section id="learnSection">
+      <h2>Study the objects and their names</h2>
+      <p>You will have 2 minutes to study these. After one minute you may start the test early.</p>
+      <div class="timer" id="learnTimer">2:00</div>
+      <div id="gridContainer" style="display: flex; flex-wrap: wrap;"></div>
+    </section>
+    <!-- Testing phase -->
+    <section id="testSection">
+      <h2>Test your vocabulary</h2>
+      <div class="timer" id="testProgress"></div>
+      <img id="testImage" src="" alt="Test image" style="width: 120px; height: 120px; display: none;" />
+      <div id="optionsContainer" class="quiz-options"></div>
+      <div class="score-display" id="resultDisplay"></div>
+    </section>
+  </main>
+  <footer>
+    <p>Return to <a href="index.html">home</a>.</p>
+  </footer>
+</body>
+</html>
