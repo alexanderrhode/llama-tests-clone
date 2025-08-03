@@ -33,10 +33,10 @@
           'yua', 'xika', 'suku', 'tachi'
         ];
         items = names.map((name, index) => ({
-          name,
-          // use placeholder.com images with index number to differentiate
-          image: `https://via.placeholder.com/120?text=${index + 1}`
-        }));
+ items = names.map(name => ({
+    name,
+    image: 'media/llama_b/' + name + '.png'
+}));
       }
 
       function renderGrid() {
